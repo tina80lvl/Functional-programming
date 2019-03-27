@@ -10,7 +10,7 @@ import Test.Tasty.Hspec
 import Test.Tasty (TestTree)
 
 hspecTestTree :: IO TestTree
-hspecTestTree = testSpec "--- Testing Block 2 ---" spec11
+hspecTestTree = testSpec "--- Testing Block 2 ---" spec
 
 spec :: Spec
 spec = do
