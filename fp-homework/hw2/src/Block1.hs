@@ -42,6 +42,12 @@ instance Applicative NonEmpty where
   (<*>) (f :| fs) (a :| as) = (f a) :| rest where
     rest = concat [(fmap f as), (fmap (\g -> g a) fs), (fs <*> as)]
 
+instance Monad NonEmpty where
+  ~(a :| as) >>= f = b :| (bs ++ bs')
+    where b :| bs = f a
+          bs' = as >>= toList . f
+          toList ~(c :| cs) = c : cs
+
 instance Foldable NonEmpty where
   foldr f z (a :| as) = f a (foldr f z as)
 
