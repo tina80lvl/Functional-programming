@@ -4,50 +4,58 @@ module Task2
   , minus
   , scalarProduct
   , crossProduct
+  , difference
   , perimeter
+  , helper
   , doubleArea
   ) where
 
-import Number
+import Control.Monad.ST
+import Data.Array.ST
+import Data.STRef
+import Data.Array.MArray
+import Data.Foldable
+import Data.List
 
-type Point = Vector Number
-data Line
-    = PointSlope {
-        point :: Point,
-        slope :: Slope
-    }
-    | PointPoint {
-        p1, p2 :: Point
-    }
-    deriving (Eq, Show, Read)
+data Point = Point {
+  x :: Int,
+  y :: Int
+} deriving Show
 
-data Vector a
-    = Vector a a
-    deriving (Eq, Show, Read)
+plus :: Point -> Point -> Point
+plus a b = Point { x = x a + x b, y = y a + y b }
 
-instance Num a => Num (Vector a) where
-    (Vector x1 y1) + (Vector x2 y2) = Vector (x1 + x2) (y1 + y2)
-    (Vector x1 y1) - (Vector x2 y2) = Vector (x1 - x2) (y1 - y2)
-    (Vector x1 y1) * (Vector x2 y2) =
-        Vector (y1 * z2 - z1 * y2) (z1 * x2 - x1 * z2) (x1 * y2 - y1 * x2)
-    negate (Vector x y) =
-        Vector (negate x) (negate y)
-    abs (Vector x y) =
-        Vector (abs x) (abs y)
-    signum (Vector x y) =
-        Vector (signum x) (signum y)
-    fromInteger x =
-        let int = fromInteger x
-        in Vector int int
-
-plus          :: Point -> Point -> Point
-
-minus         :: Point -> Point -> Point
+minus :: Point -> Point -> Point
+minus a b = Point { x = x a - x b, y = y a - y b }
 
 scalarProduct :: Point -> Point -> Int
+scalarProduct a b = x a * x b + y a * y b
 
-crossProduct  :: Point -> Point -> Int
+crossProduct :: Point -> Point -> Int
+crossProduct a b = x a * y b - y a * x b
 
-perimeter  :: [Point] -> Double -- Считает периметр
+difference :: Point -> Point -> Double
+difference a b = let t = minus a b in sqrt $ fromIntegral $ scalarProduct t t
 
-doubleArea :: [Point] -> Int    -- Считает удвоенную площадь
+helper :: Num b => [(Point, Point)] -> ((Point, Point) -> b) -> b -> b
+helper arr f acc = runST $ do
+  arr' <- newListArray (0, length arr - 1) arr :: ST s (STArray s Int (Point, Point))
+  res <- newSTRef acc
+  for_ [0..length arr - 1] $ \i -> do
+    el <- readArray arr' i
+    modifySTRef res (+ f el)
+  modifySTRef res abs
+  readSTRef res
+
+perimeter  :: [Point] -> Double
+perimeter [] = 0.0
+perimeter q@(p:ps) = helper edges (uncurry difference) 0.0 where
+  edges = zip q (ps++[p])
+
+doubleArea :: [Point] -> Int
+doubleArea q@(p0:p:ps) = helper points (uncurry crossProduct) 0 where
+  points = map (\(a, b) -> (minus a p0, minus b p0)) points'
+  points' = zip (p:ps) ps
+
+t :: [Point]
+t = map (\(a, b) -> Point {x = a, y = b} ) $ [(0,0), (0,1), (1,1), (1, 0)]
