@@ -62,44 +62,50 @@ validateCoordinate coord =
 
 validateShipCoordinates :: [Ship] -> Ship -> Int -> Bool
 validateShipCoordinates placedShips ship shipLength
-    | length ship /= shipLength = False
-    | or [coord1 == coord2 |
-      ship2 <- placedShips, coord1 <- ship, coord2 <- ship2] = False
-    | not (and [validateCoordinate coord | coord <- ship]) = False
-    | and (map (==0) [abs ((fst coord1) - (fst coord2)) |
-      coord1 <- ship, coord2 <- ship])
-        = (sum [abs ((snd coord1) - (snd coord2)) |
-          coord1 <- ship, coord2 <- ship]) * 3 == (shipLength-1) *
-            (shipLength ^ 2 + shipLength)
-    | and (map (==0) [abs ((snd coord1) - (snd coord2)) |
-      coord1 <- ship, coord2 <- ship])
-        = (sum [abs ((fst coord1) - (fst coord2)) |
-          coord1 <- ship, coord2 <- ship]) * 3 == (shipLength-1) *
-            (shipLength ^ 2 + shipLength)
-    | otherwise = False
+  -- Check if ship was given enough coordinates
+  | length ship /= shipLength = False
+  -- The coordinates may not overlap with another ship
+  | or [coord1 == coord2 |
+    ship2 <- placedShips, coord1 <- ship, coord2 <- ship2] = False
+  -- Check if coordinates lie in the field
+  | not (and [validateCoordinate coord | coord <- ship]) = False
+  -- Check if  coordinates are neighbors (vertical)
+  | and (map (==0) [abs ((fst coord1) - (fst coord2)) |
+    coord1 <- ship, coord2 <- ship])
+      = (sum [abs ((snd coord1) - (snd coord2)) |
+        coord1 <- ship, coord2 <- ship]) * 3 == (shipLength-1) *
+          (shipLength^2 + shipLength)
+  -- Check if  coordinates are neighbors (horizontal)
+  | and (map (==0) [abs ((snd coord1) - (snd coord2)) |
+    coord1 <- ship, coord2 <- ship])
+      = (sum [abs ((fst coord1) - (fst coord2)) |
+        coord1 <- ship, coord2 <- ship]) * 3 == (shipLength-1) *
+          (shipLength^2 + shipLength)
+  -- Coordinates are not on the same line
+  | otherwise = False
 
 convertFieldToString :: Field -> [Ship] -> Coordinate -> String
 convertFieldToString field ships coordinate
-        | fst coordinate <= fieldSize
-          && snd coordinate <= fieldSize =
-            if select (select field (snd coordinate)) (fst coordinate) == True then
-               if or [coordinate == coord | ship <- ships, coord <- ship] then
-                 'x' : convertFieldToString field ships (fst coordinate + 1,
-                                                         snd coordinate)
-               else 'o' : convertFieldToString field ships (fst coordinate + 1,
-                                                            snd coordinate)
-            else ' ' : convertFieldToString field ships (fst coordinate + 1,
-                                                         snd coordinate)
+  | fst coordinate <= fieldSize
+    && snd coordinate <= fieldSize =
+      if select (select field (snd coordinate)) (fst coordinate) == True then
+         if or [coordinate == coord | ship <- ships, coord <- ship] then
+           'x' : convertFieldToString field ships (fst coordinate + 1,
+                                                   snd coordinate)
+         else 'o' : convertFieldToString field ships (fst coordinate + 1,
+                                                      snd coordinate)
+      else ' ' : convertFieldToString field ships (fst coordinate + 1,
+                                                   snd coordinate)
 
-        | snd coordinate <= fieldSize = "+\n+" ++
-          convertFieldToString field ships (1, snd coordinate + 1)
-        | otherwise = []
+  | snd coordinate <= fieldSize = "+\n+" ++
+    convertFieldToString field ships (1, snd coordinate + 1)
+  | otherwise = []
 
 printField :: String -> Field -> [Ship] -> IO ()
 printField playerName field ships = do
   putStrLn (playerName ++ "'s field:")
-  putStrLn (take (fieldSize+2) (repeat '+') ++ "\n+" ++
-    convertFieldToString field ships (1, 1) ++ take (fieldSize+1) (repeat '+') )
+  putStrLn (take (fieldSize + 2) (repeat '+') ++ "\n+" ++
+    convertFieldToString field ships (1, 1) ++ take (fieldSize + 1) (repeat '+'))
   putStrLn ""
 
 markShot :: Field -> Int -> Int -> Field
@@ -110,7 +116,16 @@ removeDestroyedShips [] = []
 removeDestroyedShips (x:xs) | null x    = removeDestroyedShips xs
                             | otherwise = x : removeDestroyedShips xs
 
---    field, ship, coordinate
+-- Check if the ship has been destroyed and remove it from the game when it is
+-- Input:
+--    field:      The field on which the ship is located
+--    ship:       The ship that we should check the coordinate against
+--    coordinate: The coordinate that is being shot at
+-- Output:
+--    Tuple of the ship that was given as input and a boolean that indicates if
+-- the shot was a hit or miss.
+--    When the ship is sunk, an empty list will be returned instead of the ship
+-- that was given as input.
 checkShipDestroyed :: Field -> Ship -> Coordinate -> (Ship, Bool)
 checkShipDestroyed field ship coordinate =
   if or [coordinate == coord | coord <- ship] == False then do
@@ -122,6 +137,14 @@ checkShipDestroyed field ship coordinate =
      else
          ([], True)
 
+-- Fire a shot at a given coordinate
+-- Input:
+--    enemyField: The 10x10 field of the opponent
+--    enemyShips: A list of all the opponent ships
+--    coordinate: The position that we are shooting at
+-- Output:
+--    Tuple with the updated enemyField, enemyShips and a boolean to indicate a
+-- hit or miss
 fire :: (Field, [Ship]) -> Coordinate -> (Field, [Ship], Bool)
 fire (enemyField, enemyShips) coordinate =
   (markShot enemyField (snd coordinate) (fst coordinate),
@@ -129,6 +152,14 @@ fire (enemyField, enemyShips) coordinate =
   ship <- enemyShips],
   or [snd (checkShipDestroyed enemyField ship coordinate) | ship <- enemyShips])
 
+-- Fire at the opponent once for every ship you have left
+-- Input:
+--    enemyField: Current field of the opponent
+--    enemyShips: The list of all ships from the opponent
+--    oldShips: List of input ships belonging to the player
+--    ourShips:   List of ship that we have left that can still fire
+-- Output:
+--    Tuple containing the updated field and ships of the opponent
 fireWithEveryShip :: String -> (Field, [Ship]) -> [Ship] -> [Ship] -> IO (Field, [Ship])
 fireWithEveryShip name (enemyField, enemyShips) oldShips [] =
   return (enemyField, enemyShips)
@@ -162,10 +193,15 @@ fireWithEveryShip name (enemyField, enemyShips) oldShips ourShips = do
     putStrLn "❗️Correct format of coordinate: (x,y). Try again💪"
     fireWithEveryShip name (enemyField, enemyShips) oldShips ourShips
 
---    names, fields, ships
+-- Play the game, one turn at a time
+-- Input:
+--    name1, name2: Players' names
+--    fields: List of fields belonging to the players
+--    oldShips: List of input ships belonging to the player
+--    ships:  List of ships belonging to the player
+-- The first element in the tuple, is from the player whose turn it currently is
 play :: (String, String) -> [Field] -> [[Ship]] -> [[Ship]] -> IO ()
 play (name1, name2) fields oldShips ships =
-  -- TODO play (name1, name2) fields ships =
   do
     putStrLn ("\n" ++ name1 ++ "'s turn")
     printField name2 (last fields) (last oldShips)
