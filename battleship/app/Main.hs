@@ -5,12 +5,12 @@ import GameParams
 
 main :: IO ()
 main = do
-  names <- inputNames
+  (name1, name2) <- inputNames
 
-  putStrLn ("➡️  " ++ head names ++ ", enter your ships by coordinates\n")
+  putStrLn ("➡️  " ++ name1 ++ ", enter your ships by coordinates\n")
   shipsPlayer1 <- inputShips minShipSize []
 
-  putStrLn ("\n➡️  " ++ last names ++ ", enter your ships by coordinates\n")
+  putStrLn ("\n➡️  " ++ name2 ++ ", enter your ships by coordinates\n")
   shipsPlayer2 <- inputShips minShipSize []
 
-  play names [initField, initField] [shipsPlayer1, shipsPlayer2] [shipsPlayer1, shipsPlayer2]
+  play (name1, name2) [initField, initField] [shipsPlayer1, shipsPlayer2] [shipsPlayer1, shipsPlayer2]

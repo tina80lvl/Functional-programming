@@ -163,21 +163,21 @@ fireWithEveryShip name (enemyField, enemyShips) oldShips ourShips = do
     fireWithEveryShip name (enemyField, enemyShips) oldShips ourShips
 
 --    names, fields, ships
-play :: [String] -> [Field] -> [[Ship]] -> [[Ship]] -> IO ()
-play names fields oldShips ships =
+play :: (String, String) -> [Field] -> [[Ship]] -> [[Ship]] -> IO ()
+play (name1, name2) fields oldShips ships =
   -- TODO play (name1, name2) fields ships =
   do
-    putStrLn ("\n" ++ head names ++ "'s turn")
-    printField (last names) (last fields) (last oldShips)
+    putStrLn ("\n" ++ name1 ++ "'s turn")
+    printField name2 (last fields) (last oldShips)
     (newField, newShipList) <-
-      fireWithEveryShip (last names) (last fields, last ships) (last oldShips) (head ships)
+      fireWithEveryShip name2 (last fields, last ships) (last oldShips) (head ships)
     if length newShipList == 0 then
       do
-        putStrLn ("\n🏆  " ++ head names ++ " won!🎉\n")
-        printField (last names) newField (last oldShips)
-        printField (head names) (head fields) (head oldShips)
+        putStrLn ("\n🏆  " ++ name1 ++ " won!🎉\n")
+        printField name2 newField (last oldShips)
+        printField name1 (head fields) (head oldShips)
     else
-        play [last names, head names] [newField, head fields] [last oldShips, head oldShips] [newShipList, head ships]
+        play (name2, name1) [newField, head fields] [last oldShips, head oldShips] [newShipList, head ships]
 
 -- readLines :: FilePath -> IO [String]
 -- readLines = fmap lines . readFile
@@ -205,10 +205,10 @@ inputShips shipSize placedShips =
   else
       return []
 
-inputNames :: IO [String]
+inputNames :: IO (String,String)
 inputNames = do
   putStrLn "⚠️  First player: "
   name1 <- getLine
   putStrLn "⚠️  Second player: "
   name2 <- getLine
-  return [name1, name2]
+  return (name1, name2)
