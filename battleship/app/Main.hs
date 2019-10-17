@@ -1,19 +1,16 @@
 module Main where
 
 import Lib
-
-fieldSize = 10
-minShipSize = 2
-maxShipSize = 5
+import GameParams
 
 main :: IO ()
 main = do
   names <- inputNames
 
-  putStrLn ("🚢  " ++ head names ++ ", enter your ships by coordinates (x,y)")
+  putStrLn ("🚢  " ++ head names ++ ", enter your ships by coordinates (x,y)\n")
   shipsPlayer1 <- inputShips minShipSize []
 
-  putStrLn ("\n🚢  " ++ last names ++ ", enter your ships by coordinates (x,y)")
+  putStrLn ("\n🚢  " ++ last names ++ ", enter your ships by coordinates (x,y)\n")
   shipsPlayer2 <- inputShips minShipSize []
 
   play names [initField, initField] [shipsPlayer1, shipsPlayer2] [shipsPlayer1, shipsPlayer2]

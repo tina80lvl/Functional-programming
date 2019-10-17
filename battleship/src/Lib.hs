@@ -22,14 +22,12 @@ module Lib
 import Data.Char (ord)
 import Data.List (permutations)
 
+import GameParams
+
 type Coordinate = (Int, Int)
 type Ship = [Coordinate]
 type Field = [[Bool]]
 type Player = String
-
-fieldSize = 10
-minShipSize = 2
-maxShipSize = 5
 
 select :: [a] -> Int -> a
 select xs n = head (drop (n - 1) (take n xs))
@@ -186,13 +184,14 @@ play names fields oldShips ships =
 inputShip :: [Ship] -> Int -> IO Ship
 inputShip placedShips len =
   do
-    putStrLn ("  ➡️  Enter the coordinates of the ship of length " ++ show len)
+    putStrLn ("➡️  Enter the coordinates of the ship of length " ++ show len)
     string <- getLine
     let stringCoords = splitCoordinatesInString string
     let coords = map convertStringToCoordinates stringCoords
     if validateShipCoordinates placedShips coords len then
         return coords
     else
+        -- putStrLn "❗️Correct format of coordinates: (x1,y1); (x2,y2) ..."
         inputShip placedShips len
 
 inputShips :: Int -> [Ship] -> IO [Ship]
