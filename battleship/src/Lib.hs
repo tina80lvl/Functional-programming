@@ -82,7 +82,7 @@ convertFieldToString :: Field -> [Ship] -> Coordinate -> String
 convertFieldToString field ships coordinate
         | fst coordinate <= fieldSize
           && snd coordinate <= fieldSize =
-            if (!!) ((!!) field (snd coordinate)) (fst coordinate) == True then
+            if select (select field (snd coordinate)) (fst coordinate) == True then
                if or [coordinate == coord | ship <- ships, coord <- ship] then
                  'x' : convertFieldToString field ships (fst coordinate + 1,
                                                          snd coordinate)
@@ -91,19 +91,19 @@ convertFieldToString field ships coordinate
             else ' ' : convertFieldToString field ships (fst coordinate + 1,
                                                          snd coordinate)
 
-        | snd coordinate <= fieldSize = "H\nH" ++
+        | snd coordinate <= fieldSize = "+\n+" ++
           convertFieldToString field ships (1, snd coordinate + 1)
         | otherwise = []
 
 printField :: String -> Field -> [Ship] -> IO ()
 printField playerName field ships = do
   putStrLn (playerName ++ "'s field:")
-  putStrLn (take (fieldSize+2) (repeat 'H') ++ "\nH" ++
-    convertFieldToString field ships (1, 1) ++ take (fieldSize+1) (repeat 'H') )
+  putStrLn (take (fieldSize+2) (repeat '+') ++ "\n+" ++
+    convertFieldToString field ships (1, 1) ++ take (fieldSize+1) (repeat '+') )
   putStrLn ""
 
 markShot :: Field -> Int -> Int -> Field
-markShot field x y = replace x field (replace y ((!!) field x) True)
+markShot field x y = replace x field (replace y (select field x) True)
 
 removeDestroyedShips :: [Ship] -> [Ship]
 removeDestroyedShips [] = []
@@ -116,7 +116,7 @@ checkShipDestroyed field ship coordinate =
   if or [coordinate == coord | coord <- ship] == False then do
      (ship, False)
   else do
-     if and [(!!) ((!!) field (snd coord)) (fst coord) == True |
+     if and [select (select field (snd coord)) (fst coord) == True |
        coord <- ship, coord /= coordinate] == False then
          (ship, True)
      else
@@ -158,7 +158,8 @@ fireWithEveryShip name (enemyField, enemyShips) oldShips ourShips = do
             fireWithEveryShip name (newEnemyField, newEnemyShips) oldShips (tail ourShips)
       else
         fireWithEveryShip name (newEnemyField, newEnemyShips) oldShips (tail ourShips)
-  else
+  else do
+    putStrLn "❗️Correct format of coordinate: (x,y). Try again💪"
     fireWithEveryShip name (enemyField, enemyShips) oldShips ourShips
 
 --    names, fields, ships
@@ -166,7 +167,7 @@ play :: [String] -> [Field] -> [[Ship]] -> [[Ship]] -> IO ()
 play names fields oldShips ships =
   -- TODO play (name1, name2) fields ships =
   do
-    putStrLn ("\n " ++ head names ++ "'s turn")
+    putStrLn ("\n" ++ head names ++ "'s turn")
     printField (last names) (last fields) (last oldShips)
     (newField, newShipList) <-
       fireWithEveryShip (last names) (last fields, last ships) (last oldShips) (head ships)
@@ -184,15 +185,15 @@ play names fields oldShips ships =
 inputShip :: [Ship] -> Int -> IO Ship
 inputShip placedShips len =
   do
-    putStrLn ("➡️  Enter the coordinates of the ship of length " ++ show len)
+    putStrLn ("🚢  Enter the coordinates of the ship of length " ++ show len)
     string <- getLine
     let stringCoords = splitCoordinatesInString string
     let coords = map convertStringToCoordinates stringCoords
     if validateShipCoordinates placedShips coords len then
-        return coords
-    else
-        -- putStrLn "❗️Correct format of coordinates: (x1,y1); (x2,y2) ..."
-        inputShip placedShips len
+      return coords
+    else do
+      putStrLn "❗️ Correct format of coordinates: (x1,y1);(x2,y2);... Try again💪"
+      inputShip placedShips len
 
 inputShips :: Int -> [Ship] -> IO [Ship]
 inputShips shipSize placedShips =
