@@ -107,11 +107,11 @@ play (sock1, sock2) (name1, name2) fields oldShips ships =
     putStrLn ("\n" ++ name1 ++ "'s turn")
     sendAll sock1 (encode "Your turn")
 
-    sendAll sock1 (encode . show $ (sock1, name2, (last fields, last ships), (last oldShips), (head ships)))
+    sendAll sock1 (encode . show $ (name2, (last fields, last ships), (last oldShips), (head ships)))
 
     -- printField name2 (last fields) (last oldShips)
-    (newField, newShipList) <- fmap decode $ recv sock 20000
-    --   fireWithEveryShip sock1 name2 (last fields, last ships) (last oldShips) (head ships)
+    ans <- fmap decode $ recv sock1 20000
+    let (newField, newShipList) = read (ans) :: (Field, [Ship])
     if length newShipList == 0 then
       do
         putStrLn ("\n🏆  " ++ name1 ++ " won!🎉\n")
@@ -119,45 +119,3 @@ play (sock1, sock2) (name1, name2) fields oldShips ships =
         printField name1 (head fields) (head oldShips)
     else
         play (sock2, sock1) (name2, name1) [newField, head fields] [last oldShips, head oldShips] [newShipList, head ships]
-
-
--- -- Fire at the opponent once for every ship you have left
--- -- Input:
--- --    enemyField: Current field of the opponent
--- --    enemyShips: The list of all ships from the opponent
--- --    oldShips: List of input ships belonging to the player
--- --    ourShips:   List of ship that we have left that can still fire
--- -- Output:
--- --    Tuple containing the updated field and ships of the opponent
--- fireWithEveryShip :: Socket -> String -> (Field, [Ship]) -> [Ship] -> [Ship] -> IO (Field, [Ship])
--- fireWithEveryShip sock name (enemyField, enemyShips) oldShips [] =
---   return (enemyField, enemyShips)
--- fireWithEveryShip sock name (enemyField, enemyShips) oldShips ourShips = do
---   putStrLn ("🎯  Enter the coordinates to fire shot (" ++
---     show (length ourShips) ++ " shots left)")
---   string <- getLine
---   let coord = convertStringToCoordinates string
---   if validateCoordinate coord then
---     do
---       let (newEnemyField, newEnemyShips, hit) = fire (enemyField, enemyShips) coord
---
---       if hit then
---         putStrLn ("Firing at coordinate (" ++ show ((fst coord) - 1) ++
---           "," ++ show ((snd coord) - 1) ++ "), Hit ❌")
---       else
---         putStrLn ("Firing at coordinate (" ++ show ((fst coord) - 1) ++
---           "," ++ show ((snd coord) - 1) ++ "), Miss ⚪️")
---       printField name newEnemyField oldShips
---
---       if length newEnemyShips < length enemyShips then
---         do
---           putStrLn "💣  You sunk my battleship!"
---           if length newEnemyShips == 0 then
---             return (newEnemyField, newEnemyShips)
---           else
---             fireWithEveryShip sock name (newEnemyField, newEnemyShips) oldShips (tail ourShips)
---       else
---         fireWithEveryShip sock name (newEnemyField, newEnemyShips) oldShips (tail ourShips)
---   else do
---     putStrLn "❗️Correct format of coordinate: (x,y). Try again💪"
---     fireWithEveryShip sock name (enemyField, enemyShips) oldShips ourShips

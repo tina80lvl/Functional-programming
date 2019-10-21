@@ -1,3 +1,6 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
+
 module Main where
 
 import Lib
@@ -55,10 +58,12 @@ goPlay sock = do
   msg <- fmap decode $ recv sock 20000
   putStrLn msg
 
-  (sock, name, (fieldsL, shipsL), oldShipsL, shipsH) <-
-    fmap decode $ recv sock 20000
+-- (sock, name, (fieldsL, shipsL), oldShipsL, shipsH)
+  ans :: String <- fmap decode $ recv sock 20000
+  let (name, (fieldsL, shipsL), oldShipsL, shipsH) = read (ans) :: (String, (Field, [Ship]), [Ship], [Ship])
+
   (newField, newShipList) <-
-    fireWithEveryShip sock name (fieldsL, shipsL) (oldShipsL) (shipsH)
+    fireWithEveryShip name (fieldsL, shipsL) (oldShipsL) (shipsH)
   sendAll sock (encode . show $ (newField, newShipList))
 
   goPlay sock
