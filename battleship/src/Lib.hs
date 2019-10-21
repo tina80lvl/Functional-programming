@@ -38,11 +38,17 @@ replace n xs x = take (n - 1) xs ++ [x] ++ drop n xs
 initField :: Field
 initField = take fieldSize (repeat (take fieldSize (repeat False)))
 
+-- Extract the coordinate from the string
+-- Also immediately convert the coordinate from range [0,10[ to [1,10]
 convertStringToCoordinates :: String -> Coordinate
 convertStringToCoordinates ['(', x, ',', y, ')'] =
   ((ord x) - (ord '0') + 1, (ord y) - (ord '0') + 1)
 convertStringToCoordinates _ = (-1, -1)
 
+-- Split a string containing coordinates seperated by semi-colons into a list of
+-- (unchecked) coordinates.
+-- You must still call convertStringToCoordinates on every element in the
+-- returned list.
 splitCoordinatesInString :: String -> [String]
 splitCoordinatesInString [] = [[]]
 splitCoordinatesInString (x:xs) =
@@ -240,11 +246,3 @@ inputShips shipSize placedShips =
         return (ship : shipList)
   else
       return []
-
-inputNames :: IO (String,String)
-inputNames = do
-  putStrLn "⚠️  First player: "
-  name1 <- getLine
-  putStrLn "⚠️  Second player: "
-  name2 <- getLine
-  return (name1, name2)
