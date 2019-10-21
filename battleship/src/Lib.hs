@@ -1,23 +1,23 @@
-module Lib
-    ( select
-    , replace
-    , initField
-    , convertStringToCoordinates
-    , splitCoordinatesInString
-    , validateCoordinate
-    , validateShipCoordinates
-    , convertFieldToString
-    , printField
-    , markShot
-    , removeDestroyedShips
-    , checkShipDestroyed
-    , fire
-    , fireWithEveryShip
-    , play
-    , inputShip
-    , inputShips
-    , inputNames
-    ) where
+-- module Lib
+--     ( select
+--     , replace
+--     , initField
+--     , convertStringToCoordinates
+--     , splitCoordinatesInString
+--     , validateCoordinate
+--     , validateShipCoordinates
+--     , convertFieldToString
+--     , printField
+--     , markShot
+--     , removeDestroyedShips
+--     , checkShipDestroyed
+--     , fire
+--     , fireWithEveryShip
+--     , play
+--     , inputShip
+--     , inputShips
+--     ) where
+module Lib where
 
 import Data.Char (ord)
 import Data.List (permutations)
@@ -199,27 +199,27 @@ fireWithEveryShip name (enemyField, enemyShips) oldShips ourShips = do
     putStrLn "❗️Correct format of coordinate: (x,y). Try again💪"
     fireWithEveryShip name (enemyField, enemyShips) oldShips ourShips
 
--- Play the game, one turn at a time
--- Input:
---    name1, name2: Players' names
---    fields: List of fields belonging to the players
---    oldShips: List of input ships belonging to the player
---    ships:  List of ships belonging to the player
--- The first element in the tuple, is from the player whose turn it currently is
-play :: (String, String) -> [Field] -> [[Ship]] -> [[Ship]] -> IO ()
-play (name1, name2) fields oldShips ships =
-  do
-    putStrLn ("\n" ++ name1 ++ "'s turn")
-    printField name2 (last fields) (last oldShips)
-    (newField, newShipList) <-
-      fireWithEveryShip name2 (last fields, last ships) (last oldShips) (head ships)
-    if length newShipList == 0 then
-      do
-        putStrLn ("\n🏆  " ++ name1 ++ " won!🎉\n")
-        printField name2 newField (last oldShips)
-        printField name1 (head fields) (head oldShips)
-    else
-        play (name2, name1) [newField, head fields] [last oldShips, head oldShips] [newShipList, head ships]
+-- -- Play the game, one turn at a time
+-- -- Input:
+-- --    name1, name2: Players' names
+-- --    fields: List of fields belonging to the players
+-- --    oldShips: List of input ships belonging to the player
+-- --    ships:  List of ships belonging to the player
+-- -- The first element in the tuple, is from the player whose turn it currently is
+-- play :: (String, String) -> [Field] -> [[Ship]] -> [[Ship]] -> IO ()
+-- play (name1, name2) fields oldShips ships =
+--   do
+--     putStrLn ("\n" ++ name1 ++ "'s turn")
+--     printField name2 (last fields) (last oldShips)
+--     (newField, newShipList) <-
+--       fireWithEveryShip name2 (last fields, last ships) (last oldShips) (head ships)
+--     if length newShipList == 0 then
+--       do
+--         putStrLn ("\n🏆  " ++ name1 ++ " won!🎉\n")
+--         printField name2 newField (last oldShips)
+--         printField name1 (head fields) (head oldShips)
+--     else
+--         play (name2, name1) [newField, head fields] [last oldShips, head oldShips] [newShipList, head ships]
 
 -- readLines :: FilePath -> IO [String]
 -- readLines = fmap lines . readFile

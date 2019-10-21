@@ -5,7 +5,8 @@ import GameParams
 
 main :: IO ()
 main = do
-  (name1, name2) <- inputNames
+  -- (name1, name2) <- inputNames
+  let (name1, name2) = ("qwe", "qwe")
 
   putStrLn ("➡️  " ++ name1 ++ ", enter your ships by coordinates\n")
   shipsPlayer1 <- inputShips minShipSize []
