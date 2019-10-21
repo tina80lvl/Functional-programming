@@ -1,6 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-
 module Main where
 
 import Lib
@@ -38,10 +37,10 @@ open addr = do
 
 runClient :: Socket -> IO ()
 runClient sock = do
-  putStrLn "Enter name"
+  putStrLn "👋 Enter your name: "
   pname <- getLine
 
-  putStrLn "Enter ships"
+  putStrLn (pname ++ ", enter your ships, please.")
   ships <- inputShips minShipSize []
   sendAll sock (encode pname)
 
@@ -58,7 +57,6 @@ goPlay sock = do
   msg <- fmap decode $ recv sock 20000
   putStrLn msg
 
--- (sock, name, (fieldsL, shipsL), oldShipsL, shipsH)
   ans :: String <- fmap decode $ recv sock 20000
   let (name, (fieldsL, shipsL), oldShipsL, shipsH) = read (ans) :: (String, (Field, [Ship]), [Ship], [Ship])
 

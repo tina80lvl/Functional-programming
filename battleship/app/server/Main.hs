@@ -1,6 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-
 module Main where
 
 import Lib
@@ -21,8 +20,6 @@ main = withSocketsDo $ do
                                                        putStrLn "Expected <port>"
                                                        exitFailure
   addr <- resolve port
-  -- putStrLn $ show players
-  -- putStrLn $ show addr
   bracket (open players addr) close (runServer)
 
 resolve :: String -> IO AddrInfo
@@ -41,33 +38,6 @@ open players addr = do
     listen sock players
     return sock
 
-
--- inputShip :: Socket -> [Ship] -> Int -> IO Ship
--- inputShip sock placedShips len =
---   do
---     -- putStrLn ("🚢  Enter the coordinates of the ship of length " ++ show len)
---     -- string <- getLine
---     -- shipString <- fmap (read . decode) $ recv sock 200000
---     shipString :: String <- fmap decode $ recv sock 20000
---     let stringCoords = splitCoordinatesInString shipString
---     let coords = map convertStringToCoordinates stringCoords
---     if validateShipCoordinates placedShips coords len then
---       return coords
---     else do
---       -- putStrLn "❗️ Correct format of coordinates: (x1,y1);(x2,y2);... Try again💪"
---       Main.inputShip sock placedShips len
---
--- inputShips :: Socket -> Int -> [Ship] -> IO [Ship]
--- inputShips sock shipSize placedShips =
---   if shipSize <= maxShipSize then
---       do
---         ship <- Main.inputShip sock placedShips shipSize
---         shipList <- Main.inputShips sock (shipSize + 1) (ship : placedShips)
---         return (ship : shipList)
---   else
---       return []
-
-
 getNameAndShips :: Socket -> IO (String, [Ship])
 getNameAndShips sock = do
   name :: String <- fmap decode $ recv sock 100
@@ -80,19 +50,11 @@ runServer :: Socket -> IO ()
 runServer sock = do
   (p1Sock, _) <- accept sock
   (p2Sock, _) <- accept sock
-  -- name1 <- fmap (read . decode) $ recv p1Sock 10000
-  -- name1 <- fmap (read) (decode $ recv p1Sock 10000)
   (name1, ships1) <- getNameAndShips p1Sock
   (name2, ships2) <- getNameAndShips p2Sock
   putStrLn $ show ships1
   putStrLn $ show ships2
   play (p1Sock, p2Sock) (name1, name2) [initField, initField] [ships1, ships2] [ships1, ships2]
-
-
--- loop :: Socket -> Socket -> [Ship] -> [Ship] -> IO ()
--- loop (sock1 sock2 s1 s2 = undefined
--- send to first player "your turn"
--- recieve from first player his move
 
 -- Play the game, one turn at a time
 -- Input:
@@ -109,7 +71,6 @@ play (sock1, sock2) (name1, name2) fields oldShips ships =
 
     sendAll sock1 (encode . show $ (name2, (last fields, last ships), (last oldShips), (head ships)))
 
-    -- printField name2 (last fields) (last oldShips)
     ans <- fmap decode $ recv sock1 20000
     let (newField, newShipList) = read (ans) :: (Field, [Ship])
     if length newShipList == 0 then
